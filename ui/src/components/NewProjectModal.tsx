@@ -148,6 +148,12 @@ export function NewProjectModal({
     setSpecMethod(null)
   }
 
+  const handleExitToProject = () => {
+    // Exit chat and go directly to project - user can start agent manually
+    onProjectCreated(projectName.trim())
+    handleClose()
+  }
+
   const handleClose = () => {
     setStep('name')
     setProjectName('')
@@ -178,6 +184,7 @@ export function NewProjectModal({
           projectName={projectName.trim()}
           onComplete={handleSpecComplete}
           onCancel={handleChatCancel}
+          onExitToProject={handleExitToProject}
           initializerStatus={initializerStatus}
           initializerError={initializerError}
           onRetryInitializer={handleRetryInitializer}

@@ -6,7 +6,7 @@
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { Send, X, CheckCircle2, AlertCircle, Wifi, WifiOff, RotateCcw, Loader2, ArrowRight, Zap, Paperclip } from 'lucide-react'
+import { Send, X, CheckCircle2, AlertCircle, Wifi, WifiOff, RotateCcw, Loader2, ArrowRight, Zap, Paperclip, ExternalLink } from 'lucide-react'
 import { useSpecChat } from '../hooks/useSpecChat'
 import { ChatMessage } from './ChatMessage'
 import { QuestionOptions } from './QuestionOptions'
@@ -23,6 +23,7 @@ interface SpecCreationChatProps {
   projectName: string
   onComplete: (specPath: string, yoloMode?: boolean) => void
   onCancel: () => void
+  onExitToProject: () => void  // Exit to project without starting agent
   initializerStatus?: InitializerStatus
   initializerError?: string | null
   onRetryInitializer?: () => void
@@ -32,6 +33,7 @@ export function SpecCreationChat({
   projectName,
   onComplete,
   onCancel,
+  onExitToProject,
   initializerStatus = 'idle',
   initializerError = null,
   onRetryInitializer,
@@ -85,6 +87,13 @@ export function SpecCreationChat({
     const trimmed = input.trim()
     // Allow sending if there's text OR attachments
     if ((!trimmed && pendingAttachments.length === 0) || isLoading) return
+
+    // Detect /exit command - exit to project without sending to Claude
+    if (/^\s*\/exit\s*$/i.test(trimmed)) {
+      setInput('')
+      onExitToProject()
+      return
+    }
 
     sendMessage(trimmed, pendingAttachments.length > 0 ? pendingAttachments : undefined)
     setInput('')
@@ -209,6 +218,16 @@ export function SpecCreationChat({
               Complete
             </span>
           )}
+
+          {/* Exit to Project - always visible escape hatch */}
+          <button
+            onClick={onExitToProject}
+            className="neo-btn neo-btn-ghost text-sm py-2"
+            title="Exit chat and go to project (you can start the agent manually)"
+          >
+            <ExternalLink size={16} />
+            Exit to Project
+          </button>
 
           <button
             onClick={onCancel}
@@ -347,7 +366,7 @@ export function SpecCreationChat({
                   ? 'Or type a custom response...'
                   : pendingAttachments.length > 0
                     ? 'Add a message with your image(s)...'
-                    : 'Type your response...'
+                    : 'Type your response... (or /exit to go to project)'
               }
               className="neo-input flex-1"
               disabled={(isLoading && !currentQuestions) || connectionStatus !== 'connected'}

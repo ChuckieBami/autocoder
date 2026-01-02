@@ -4,6 +4,7 @@
 
 import { useState, useCallback, useRef, useEffect } from 'react'
 import type { ChatMessage, ImageAttachment, SpecChatServerMessage, SpecQuestion } from '../lib/types'
+import { getSpecStatus } from '../lib/api'
 
 type ConnectionStatus = 'disconnected' | 'connecting' | 'connected' | 'error'
 
@@ -69,6 +70,66 @@ export function useSpecChat({
       }
     }
   }, [])
+
+  // Poll status file as fallback completion detection
+  // Claude writes .spec_status.json when done with all spec work
+  useEffect(() => {
+    // Don't poll if already complete
+    if (isComplete) return
+
+    // Start polling after initial delay (let WebSocket try first)
+    const startDelay = setTimeout(() => {
+      const pollInterval = setInterval(async () => {
+        // Stop if already complete
+        if (isCompleteRef.current) {
+          clearInterval(pollInterval)
+          return
+        }
+
+        try {
+          const status = await getSpecStatus(projectName)
+
+          if (status.exists && status.status === 'complete') {
+            // Status file indicates completion - set complete state
+            setIsComplete(true)
+            setIsLoading(false)
+
+            // Mark any streaming message as done
+            setMessages((prev) => {
+              const lastMessage = prev[prev.length - 1]
+              if (lastMessage?.role === 'assistant' && lastMessage.isStreaming) {
+                return [
+                  ...prev.slice(0, -1),
+                  { ...lastMessage, isStreaming: false },
+                ]
+              }
+              return prev
+            })
+
+            // Add system message about completion
+            setMessages((prev) => [
+              ...prev,
+              {
+                id: generateId(),
+                role: 'system',
+                content: `Spec creation complete! Files written: ${status.files_written.join(', ')}${status.feature_count ? ` (${status.feature_count} features)` : ''}`,
+                timestamp: new Date(),
+              },
+            ])
+
+            clearInterval(pollInterval)
+          }
+        } catch {
+          // Silently ignore polling errors - WebSocket is primary mechanism
+        }
+      }, 3000) // Poll every 3 seconds
+
+      // Cleanup interval on unmount
+      return () => clearInterval(pollInterval)
+    }, 3000) // Start polling after 3 second delay
+
+    return () => clearTimeout(startDelay)
+  }, [projectName, isComplete])
 
   const connect = useCallback(() => {
     if (wsRef.current?.readyState === WebSocket.OPEN) {

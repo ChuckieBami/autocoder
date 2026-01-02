@@ -473,7 +473,50 @@ After:  **CRITICAL:** You must create exactly **25** features using the `feature
 
 **Verify the update:** After editing, read the file again to confirm the feature count appears correctly. If `[FEATURE_COUNT]` still appears in the file, the update failed and you must try again.
 
-**Note:** You do NOT need to update `coding_prompt.md` - the coding agent works through features one at a time regardless of total count.
+**Note:** You may also update `coding_prompt.md` if the user requests changes to how the coding agent should work. Include it in the status file if modified.
+
+## 3. Write Status File (REQUIRED - Do This Last)
+
+**Output path:** `$ARGUMENTS/prompts/.spec_status.json`
+
+**CRITICAL:** After you have completed ALL requested file changes, write this status file to signal completion to the UI. This is required for the "Continue to Project" button to appear.
+
+Write this JSON file:
+
+```json
+{
+  "status": "complete",
+  "version": 1,
+  "timestamp": "[current ISO 8601 timestamp, e.g., 2025-01-15T14:30:00.000Z]",
+  "files_written": [
+    "prompts/app_spec.txt",
+    "prompts/initializer_prompt.md"
+  ],
+  "feature_count": [the feature count from Phase 4L]
+}
+```
+
+**Include ALL files you modified** in the `files_written` array. If the user asked you to also modify `coding_prompt.md`, include it:
+
+```json
+{
+  "status": "complete",
+  "version": 1,
+  "timestamp": "2025-01-15T14:30:00.000Z",
+  "files_written": [
+    "prompts/app_spec.txt",
+    "prompts/initializer_prompt.md",
+    "prompts/coding_prompt.md"
+  ],
+  "feature_count": 35
+}
+```
+
+**IMPORTANT:**
+- Write this file LAST, after all other files are successfully written
+- Only write it when you consider ALL requested work complete
+- The UI polls this file to detect completion and show the Continue button
+- If the user asks for additional changes after you've written this, you may update it again when the new changes are complete
 
 ---
 
@@ -487,7 +530,9 @@ Once files are generated, tell the user what to do next:
 > - `$ARGUMENTS/prompts/app_spec.txt`
 > - `$ARGUMENTS/prompts/initializer_prompt.md`
 >
-> **Next step:** Type `/exit` to exit this Claude session. The autonomous coding agent will start automatically.
+> The **Continue to Project** button should now appear. Click it to start the autonomous coding agent!
+>
+> **If you don't see the button:** Type `/exit` or click **Exit to Project** in the header.
 >
 > **Important timing expectations:**
 >

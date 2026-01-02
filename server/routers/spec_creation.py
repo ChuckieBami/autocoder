@@ -98,6 +98,67 @@ async def cancel_session(project_name: str):
     return {"success": True, "message": "Session cancelled"}
 
 
+class SpecFileStatus(BaseModel):
+    """Status of spec files on disk (from .spec_status.json)."""
+    exists: bool
+    status: str  # "complete" | "in_progress" | "not_started"
+    feature_count: Optional[int] = None
+    timestamp: Optional[str] = None
+    files_written: list[str] = []
+
+
+@router.get("/status/{project_name}", response_model=SpecFileStatus)
+async def get_spec_file_status(project_name: str):
+    """
+    Get spec creation status by reading .spec_status.json from the project.
+
+    This is used for polling to detect when Claude has finished writing spec files.
+    Claude writes this status file as the final step after completing all spec work.
+    """
+    if not validate_project_name(project_name):
+        raise HTTPException(status_code=400, detail="Invalid project name")
+
+    project_dir = _get_project_path(project_name)
+    if not project_dir:
+        raise HTTPException(status_code=404, detail="Project not found in registry")
+
+    if not project_dir.exists():
+        raise HTTPException(status_code=404, detail="Project directory not found")
+
+    status_file = project_dir / "prompts" / ".spec_status.json"
+
+    if not status_file.exists():
+        return SpecFileStatus(
+            exists=False,
+            status="not_started",
+            feature_count=None,
+            timestamp=None,
+            files_written=[],
+        )
+
+    try:
+        data = json.loads(status_file.read_text(encoding="utf-8"))
+        return SpecFileStatus(
+            exists=True,
+            status=data.get("status", "unknown"),
+            feature_count=data.get("feature_count"),
+            timestamp=data.get("timestamp"),
+            files_written=data.get("files_written", []),
+        )
+    except json.JSONDecodeError as e:
+        logger.warning(f"Invalid JSON in spec status file: {e}")
+        return SpecFileStatus(
+            exists=True,
+            status="error",
+            feature_count=None,
+            timestamp=None,
+            files_written=[],
+        )
+    except Exception as e:
+        logger.error(f"Error reading spec status file: {e}")
+        raise HTTPException(status_code=500, detail="Failed to read status file")
+
+
 # ============================================================================
 # WebSocket Endpoint
 # ============================================================================

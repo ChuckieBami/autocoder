@@ -146,6 +146,22 @@ export async function resumeAgent(projectName: string): Promise<AgentActionRespo
 }
 
 // ============================================================================
+// Spec Creation API
+// ============================================================================
+
+export interface SpecFileStatus {
+  exists: boolean
+  status: 'complete' | 'in_progress' | 'not_started' | 'error' | 'unknown'
+  feature_count: number | null
+  timestamp: string | null
+  files_written: string[]
+}
+
+export async function getSpecStatus(projectName: string): Promise<SpecFileStatus> {
+  return fetchJSON(`/spec/status/${encodeURIComponent(projectName)}`)
+}
+
+// ============================================================================
 // Setup API
 // ============================================================================
 
