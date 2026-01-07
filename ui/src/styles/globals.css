@@ -163,6 +163,23 @@
     transform: none;
   }
 
+  /* YOLO Mode Button - Fiery gradient for when YOLO mode is enabled */
+  /* Uses darker orange colors for better contrast with white text (WCAG AA) */
+  .neo-btn-yolo {
+    background: linear-gradient(135deg, #d64500, #e65c00);
+    color: #ffffff;
+    box-shadow:
+      4px 4px 0 var(--color-neo-border),
+      0 0 12px rgba(255, 84, 0, 0.4);
+  }
+
+  .neo-btn-yolo:hover {
+    background: linear-gradient(135deg, #ff5400, #ff6a00);
+    box-shadow:
+      6px 6px 0 var(--color-neo-border),
+      0 0 16px rgba(255, 84, 0, 0.5);
+  }
+
   /* Inputs */
   .neo-input {
     width: 100%;

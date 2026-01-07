@@ -21,11 +21,12 @@ from .routers import (
     features_router,
     filesystem_router,
     projects_router,
+    settings_router,
     spec_creation_router,
 )
 from .schemas import SetupStatus
 from .services.assistant_chat_session import cleanup_all_sessions as cleanup_assistant_sessions
-from .services.process_manager import cleanup_all_managers
+from .services.process_manager import cleanup_all_managers, cleanup_orphaned_locks
 from .websocket import project_websocket
 
 # Paths
@@ -36,7 +37,8 @@ UI_DIST_DIR = ROOT_DIR / "ui" / "dist"
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Lifespan context manager for startup and shutdown."""
-    # Startup
+    # Startup - clean up orphaned lock files from previous runs
+    cleanup_orphaned_locks()
     yield
     # Shutdown - cleanup all running agents and assistant sessions
     await cleanup_all_managers()
@@ -92,6 +94,7 @@ app.include_router(agent_router)
 app.include_router(spec_creation_router)
 app.include_router(filesystem_router)
 app.include_router(assistant_chat_router)
+app.include_router(settings_router)
 
 
 # ============================================================================
