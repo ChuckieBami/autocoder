@@ -172,13 +172,13 @@ async def run_autonomous_agent(
         if iteration > 1 and has_features(project_dir):
             from progress import count_passing_tests
 
-            passing, total, percentage = count_passing_tests(project_dir)
+            passing, in_progress, total = count_passing_tests(project_dir)
 
             if passing > 0 and passing == total:
                 print(f"\n{'=' * 70}")
                 print(f"  ✅ BUILD COMPLETE")
                 print(f"{'=' * 70}\n")
-                print(f"All {total} features are passing ({percentage:.1f}%)")
+                print(f"All {total} features are passing (100.0%)")
                 print("No more work to do - exiting.\n")
                 break
 
