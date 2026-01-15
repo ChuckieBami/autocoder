@@ -168,6 +168,20 @@ async def run_autonomous_agent(
     while True:
         iteration += 1
 
+        # ✅ Exit early if all features are passing (after first iteration)
+        if iteration > 1 and has_features(project_dir):
+            from progress import count_passing_tests
+
+            passing, total, percentage = count_passing_tests(project_dir)
+
+            if passing > 0 and passing == total:
+                print(f"\n{'=' * 70}")
+                print(f"  ✅ BUILD COMPLETE")
+                print(f"{'=' * 70}\n")
+                print(f"All {total} features are passing ({percentage:.1f}%)")
+                print("No more work to do - exiting.\n")
+                break
+
         # Check max iterations
         if max_iterations and iteration > max_iterations:
             print(f"\nReached max iterations ({max_iterations})")
