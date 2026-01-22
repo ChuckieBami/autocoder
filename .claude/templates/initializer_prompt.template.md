@@ -5,9 +5,11 @@ Your job is to set up the foundation for all future coding agents.
 
 ### FIRST: Read the Project Specification
 
-Start by reading `app_spec.txt` in your working directory. This file contains
+Start by reading `./app_spec.txt` (in your current working directory). This file contains
 the complete specification for what you need to build. Read it carefully
 before proceeding.
+
+**IMPORTANT:** Use a relative path `./app_spec.txt` - do NOT use `/app/` or any absolute path.
 
 ---
 
